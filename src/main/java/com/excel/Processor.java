@@ -24,6 +24,7 @@ import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import com.excel.enums.ExcelUtilityEnums;
 import com.excel.pojo.AllXVACalypsos;
 import com.excel.pojo.Recon;
 import com.excel.pojo.RiskOvernightRates;
@@ -38,11 +39,23 @@ public class Processor {
 		Map<String, List> allExcelsMap = new HashMap<String, List>();
 		List<Recon> reconList = new ArrayList<Recon>();
 		Map<Long, List> reconMap = new HashMap<Long, List>();
+		if (args.length == 0 || args.length != 3) 
+		{
+			System.out.println("PLEASE PROVIDE SOURCE/ DESTINATION, XVA TRADE ACCOUNTS FILES AND THE NUMBER OF DAYS BACKWARDS TO PROCESS THE FILES.");
+			return;
+		}
+		
+		
 
+		String sourceFilePath = args[0];
+		int noOfDaysBackwards = Integer.parseInt(args[2]);
 		Date currdate = new Date();
-		LocalDate prevDate = LocalDate.now().minusDays(1);
-		LocalDate oldDate = LocalDate.now().minusDays(2);
-
+		LocalDate prevDate = LocalDate.now().minusDays(noOfDaysBackwards);
+		LocalDate oldDate = LocalDate.now().minusDays(noOfDaysBackwards + 1);
+		String destinationFilePath = args[1] + "/" + DateUtil.mmddyyyyFmtSepByEiphen(prevDate);
+		
+		
+		
 		String newSheetName = "All XVA Trades Tab";
 		String reconFile = "Recon$$";
 		String ratesOvernightRisk = "RiskOvernightRates$$";
@@ -73,12 +86,9 @@ public class Processor {
 		xvaCalypsoFilesList.add(xvaCalypsoReconDealers);
 		xvaCalypsoFilesList.add(xvaCalypsoReconDealersLDN);
 
-		if (args.length == 0 || args.length != 3) {
-			System.out.println("PLEASE PROVIDE SOURCE, DESTINATION AND XVA TRADE ACCOUNTS FILES.");
-		} else {
-			String sourceFilePath = args[0];
-			String destinationFilePath = args[1] + "/" + DateUtil.mmddyyyyFmtSepByEiphen(prevDate);
-			String xvaTradeAccountsFilePath = args[2];
+		
+		
+			
 
 			File sourceDirectory = new File(sourceFilePath);
 
@@ -136,56 +146,77 @@ public class Processor {
 					String tradeId = rskOvrRat.getTradeId();
 
 					long extAccId = getExternalAccountId(reconMap, xvaTradExtAccList, tradeId);
-					recon.setExternalAccount(extAccId);
-					recon.setTradeid(tradeId);
-					recon.setCreditcurvename(rskOvrRat.getCreditCurveName());
-					recon.setCalypsorecoveryrate(rskOvrRat.getRecoveryRate());
-					recon.setSumofunderlyingtradecount(rskOvrRat.getUnderlyingTradeCount());
-					recon.setSumofnpv(rskOvrRat.getnPV());
-					recon.setSumofcva(rskOvrRat.getcVA());
-					recon.setSumofdva(rskOvrRat.getdVA());
-					recon.setCalypsounderlyingportvalue(rskOvrRat.getUnderlyingPortValue());
-
-					for (Object calypsoObj : allCalypsosList) {
-						if (calypsoObj instanceof AllXVACalypsos) {
-							AllXVACalypsos allCalypso = (AllXVACalypsos) calypsoObj;
-							if (extAccId == allCalypso.getCptyId()) {
-								String calTradeCount = allCalypso.getCalypsoTradeCount();
-								System.out.println(calTradeCount);
-								if (calTradeCount != null && !calTradeCount.trim().equalsIgnoreCase("")) {
-									String[] calTradeCountArr = calTradeCount.split(",");
-									System.out.println(calTradeCountArr.length);
-									recon.setCalypsotradecount(calTradeCountArr.length);
-								} else {
-									recon.setCalypsotradecount(0);
+					if(extAccId != 0)
+					{
+						recon.setExternalAccount(extAccId);
+						recon.setTradeid(tradeId);
+						recon.setCreditcurvename(rskOvrRat.getCreditCurveName());
+						recon.setRecoveryrate(rskOvrRat.getRecoveryRate());
+						recon.setSumofunderlyingtradecount(rskOvrRat.getUnderlyingTradeCount());
+						recon.setSumofnpv(rskOvrRat.getnPV());
+						recon.setSumofcva(rskOvrRat.getcVA());
+						recon.setSumofdva(rskOvrRat.getdVA());
+						recon.setSumofunderlyingportvalue(rskOvrRat.getUnderlyingPortValue());
+	
+						for (Object calypsoObj : allCalypsosList) {
+							if (calypsoObj instanceof AllXVACalypsos) {
+								AllXVACalypsos allCalypso = (AllXVACalypsos) calypsoObj;
+								if (extAccId == allCalypso.getCptyId()) {
+									String calTradeCount = allCalypso.getCalypsoTradeCount();
+									System.out.println(calTradeCount);
+									if (calTradeCount != null && !calTradeCount.trim().equalsIgnoreCase("")) {
+										String[] calTradeCountArr = calTradeCount.split(",");
+										System.out.println(calTradeCountArr.length);
+										recon.setCalypsotradecount(calTradeCountArr.length);
+									} else {
+										recon.setCalypsotradecount(0);
+									}
+									recon.setCalypsonpv(allCalypso.getCalypsoNPV());
+									recon.setCalypsocva(allCalypso.getCalypsoCVA());
+									recon.setCalypsodva(allCalypso.getCalypsoDVA());
+									recon.setCalypsounderlyingportvalue(allCalypso.getCalypsoUnderlyingPortValue());
+									recon.setCalypsocreditcurve(allCalypso.getCalypsoCreditCurve());
+									recon.setCalypsorecoveryrate(allCalypso.getCalypsoRecoveryRate());
 								}
-								recon.setCalypsonpv(allCalypso.getCalypsoNPV());
-								recon.setCalypsocva(allCalypso.getCalypsoCVA());
-								recon.setCalypsodva(allCalypso.getCalypsoDVA());
-								recon.setCalypsounderlyingportvalue(allCalypso.getCalypsoUnderlyingPortValue());
-								recon.setCalypsocreditcurve(allCalypso.getCalypsoCreditCurve());
-								recon.setCalypsorecoveryrate(allCalypso.getCalypsoRecoveryRate());
+							}
+	
+						}
+	
+						// Calculate Differences
+						recon.setTradesdiff(recon.getSumofunderlyingtradecount() - recon.getCalypsotradecount());
+						recon.setNpvdiff(recon.getSumofnpv() - recon.getCalypsonpv());
+						recon.setCvadiff(recon.getSumofcva() - recon.getCalypsocva());
+						recon.setDvadiff(recon.getSumofdva() - recon.getCalypsodva());
+						recon.setPortvaldiff(recon.getSumofunderlyingportvalue() - recon.getCalypsounderlyingportvalue());
+						
+						System.out.println(rskOvrRat.getCreditCurveName());
+						System.out.println(recon.getCalypsocreditcurve());
+						if(rskOvrRat.getCreditCurveName().contains("|"))
+						{
+							String str = rskOvrRat.getCreditCurveName();
+							String[] crdtCurvNameArr = str.split("\\|");
+							
+							//String rplcStr = rskOvrRat.getCreditCurveName();
+							//rplcStr = rplcStr.replaceAll("\\|", "");
+							
+							System.out.println(crdtCurvNameArr[1]);
+							System.out.println(recon.getCalypsocreditcurve());
+							if(crdtCurvNameArr[1].equalsIgnoreCase(recon.getCalypsocreditcurve()))
+							{
+								recon.setCreditcurvematch(ExcelUtilityEnums.MATCH);
+							}
+							else
+							{
+								recon.setCreditcurvematch(ExcelUtilityEnums.DONT_MATCH);
 							}
 						}
-
+						recon.setRrdiff(recon.getRecoveryrate() - recon.getCalypsorecoveryrate());
+						
+						// recon.setuLTradesMatch(recon.get);
+						recon.setUltradesmatch(Math.abs(recon.getSumofunderlyingtradecount() - recon.getCalypsotradecount()));
+						System.out.println("Recon: " + recon);
+						reconList.add(recon);
 					}
-
-					// Calculate Differences
-					recon.setTradesdiff(recon.getSumofunderlyingtradecount() - recon.getCalypsotradecount());
-					recon.setNpvdiff(recon.getSumofnpv() - recon.getCalypsonpv());
-					recon.setCvadiff(recon.getSumofcva() - recon.getCalypsocva());
-					recon.setDvadiff(recon.getSumofdva() - recon.getCalypsodva());
-					recon.setPortvaldiff(recon.getSumofunderlyingportvalue() - recon.getCalypsounderlyingportvalue());
-					// Need to check this CreditCurveMatch column
-					// recon.setCreditCurveMatch(recon.getCreditCurveMatch()-recon.getCalypsoCreditCurve());
-					recon.setCreditcurvematch(0.00);
-
-					recon.setCalypsorecoveryrate(recon.getRecoveryrate() - recon.getCalypsorecoveryrate());
-					// Need to check this CreditCurveMatch column
-					// recon.setuLTradesMatch(recon.get);
-					recon.setUltradesmatch(0.00);
-					System.out.println("Recon: " + recon);
-					reconList.add(recon);
 
 				}
 			}
@@ -203,7 +234,7 @@ public class Processor {
 			
 			// Step5: Create an excel with name: ReconT-1 with tab name: All XVA Trades Tab and copy all the data from NPV results sheet in Rates Overnight Risk file
 			ExcelWriter.write(destinationFilePath, reconFile, reconList);
-		}
+		
 	}
 
 	/***

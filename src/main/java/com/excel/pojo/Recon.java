@@ -6,6 +6,7 @@ import org.apache.poi.excel.annotation.ExcelCell;
 import org.apache.poi.excel.annotation.ExcelSheet;
 import org.apache.poi.excel.model.ExcelCellType;
 
+import com.excel.enums.ExcelUtilityEnums;
 import com.poiji.annotation.ExcelCellName;
 import com.poiji.annotation.ExcelRow;
 
@@ -65,7 +66,7 @@ public class Recon{
     private double calypsorecoveryrate;
     
 	@ExcelCell(header = "Trades Diff", type = ExcelCellType.DECIMAL)
-    private double tradesdiff;
+    private long tradesdiff;
     
 	@ExcelCell(header = "NPV Diff", type = ExcelCellType.DECIMAL)
     private double npvdiff;
@@ -79,14 +80,14 @@ public class Recon{
 	@ExcelCell(header = "PortVal Diff", type = ExcelCellType.DECIMAL)
     private double portvaldiff;
     
-	@ExcelCell(header = "Credit Curve Match", type = ExcelCellType.DECIMAL)
-    private double creditcurvematch;
+	@ExcelCell(header = "Credit Curve Match")
+    private ExcelUtilityEnums creditcurvematch;
     
 	@ExcelCell(header = "RR Diff", type = ExcelCellType.DECIMAL)
     private double rrdiff;
 	
 	@ExcelCell(header = "UL Trades Match", type = ExcelCellType.DECIMAL)
-    private double ultradesmatch;
+    private long ultradesmatch;
     					
 	
     /*
@@ -108,8 +109,8 @@ public class Recon{
 			long sumofunderlyingtradecount, double sumofnpv, double sumofcva, double sumofdva,
 			double sumofunderlyingportvalue, long calypsotradecount, double calypsonpv, double calypsocva,
 			double calypsodva, double calypsounderlyingportvalue, String calypsocreditcurve, double calypsorecoveryrate,
-			double tradesdiff, double npvdiff, double cvadiff, double dvadiff, double portvaldiff,
-			double creditcurvematch, double rrdiff, double ultradesmatch) {
+			long tradesdiff, double npvdiff, double cvadiff, double dvadiff, double portvaldiff,
+			ExcelUtilityEnums creditcurvematch, double rrdiff, long ultradesmatch) {
 		super();
 		this.externalAccount = externalAccount;
 		this.tradeid = tradeid;
@@ -265,11 +266,11 @@ public class Recon{
 		this.calypsorecoveryrate = calypsorecoveryrate;
 	}
 
-	public double getTradesdiff() {
+	public long getTradesdiff() {
 		return tradesdiff;
 	}
 
-	public void setTradesdiff(double tradesdiff) {
+	public void setTradesdiff(long tradesdiff) {
 		this.tradesdiff = tradesdiff;
 	}
 
@@ -305,11 +306,11 @@ public class Recon{
 		this.portvaldiff = portvaldiff;
 	}
 
-	public double getCreditcurvematch() {
+	public ExcelUtilityEnums getCreditcurvematch() {
 		return creditcurvematch;
 	}
 
-	public void setCreditcurvematch(double creditcurvematch) {
+	public void setCreditcurvematch(ExcelUtilityEnums creditcurvematch) {
 		this.creditcurvematch = creditcurvematch;
 	}
 
@@ -321,11 +322,11 @@ public class Recon{
 		this.rrdiff = rrdiff;
 	}
 
-	public double getUltradesmatch() {
+	public long getUltradesmatch() {
 		return ultradesmatch;
 	}
 
-	public void setUltradesmatch(double ultradesmatch) {
+	public void setUltradesmatch(long ultradesmatch) {
 		this.ultradesmatch = ultradesmatch;
 	}
 
