@@ -1,28 +1,14 @@
 package com.excel;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.poi.excel.ExcelWriter;
-//import org.apache.poi.excel.ExcelWriter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.excel.enums.ExcelUtilityEnums;
 import com.excel.pojo.AllXVACalypsos;
@@ -39,20 +25,23 @@ public class Processor {
 		Map<String, List> allExcelsMap = new HashMap<String, List>();
 		List<Recon> reconList = new ArrayList<Recon>();
 		Map<Long, List> reconMap = new HashMap<Long, List>();
-		if (args.length == 0 || args.length != 3) 
+		if (args.length == 0 || args.length != 5) 
 		{
-			System.out.println("PLEASE PROVIDE SOURCE/ DESTINATION, XVA TRADE ACCOUNTS FILES AND THE NUMBER OF DAYS BACKWARDS TO PROCESS THE FILES.");
+			System.out.println("PLEASE PROVIDE CALYPSO FILES PATH, RISK OVERNIGHT FILE PATH, XVA TRADE ACCOUNTS FILES PATH, DESTINATION FILE PATH, AND THE NUMBER OF DAYS BACKWARDS TO PROCESS THE FILES.");
 			return;
 		}
 		
 		
 
-		String sourceFilePath = args[0];
-		int noOfDaysBackwards = Integer.parseInt(args[2]);
+		//String sourceFilePath = args[0];
+		String calypsoFilePath = args[0];
+		String xvaTradAccFilePath = args[1];	
+		String riskOvrNghtFilePath = args[2];
+		int noOfDaysBackwards = Integer.parseInt(args[4]);
 		Date currdate = new Date();
 		LocalDate prevDate = LocalDate.now().minusDays(noOfDaysBackwards);
 		LocalDate oldDate = LocalDate.now().minusDays(noOfDaysBackwards + 1);
-		String destinationFilePath = args[1] + "/" + DateUtil.mmddyyyyFmtSepByEiphen(prevDate);
+		String destinationFilePath = args[3] + "/" + DateUtil.mmddyyyyFmtSepByEiphen(prevDate);
 		
 		
 		
@@ -90,10 +79,10 @@ public class Processor {
 		
 			
 
-			File sourceDirectory = new File(sourceFilePath);
+			File sourceDirectory = new File(calypsoFilePath);
 
 			if (!sourceDirectory.exists()) {
-				System.out.println("Soure File Directory not found.");
+				System.out.println("Soure File Directory for Calypso Files not found.");
 			}
 
 			// Step1: Create a folder with T-1 date
@@ -116,14 +105,26 @@ public class Processor {
 			}
 
 			// Step3: Copy XVA Trades to External Account file from source to destination
+			
+			File xvaTradAccDirectory = new File(xvaTradAccFilePath);
 
-			File tempXVATradesExtAccDestFile = CommonMethodsUtil.copyFileFromSourcetoDestination(sourceDirectory,
+			if (!xvaTradAccDirectory.exists()) {
+				System.out.println("Soure File Directory for XVA Trade Account File not found.");
+			}
+
+			File tempXVATradesExtAccDestFile = CommonMethodsUtil.copyFileFromSourcetoDestination(xvaTradAccDirectory,
 					destinationDirectory, xvaTradesToExternalAccount);
 			allExcelsMap = ReaderUtil.excelDataToMap(tempXVATradesExtAccDestFile);
 
 			// Step4: Copy Rates Overnight Risk file from source to destination
+			
+			File riskOvrNghtDirectory = new File(riskOvrNghtFilePath);
 
-			File tempRatesOvrnghtRiskDestFile = CommonMethodsUtil.copyFileFromSourcetoDestination(sourceDirectory,
+			if (!xvaTradAccDirectory.exists()) {
+				System.out.println("Soure File Directory for Risk Overnight File not found.");
+			}
+
+			File tempRatesOvrnghtRiskDestFile = CommonMethodsUtil.copyFileFromSourcetoDestination(riskOvrNghtDirectory,
 					destinationDirectory, ratesOvernightRisk);
 
 			CommonMethodsUtil.removeOtherSheets("NPV Results", tempRatesOvrnghtRiskDestFile);
